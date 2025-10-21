@@ -169,45 +169,81 @@ const HistoryModal: React.FC<{ user: User, onClose: () => void, onUpdate: (user:
         }
     };
 
-    const renderTable = (txs: PointTransaction[]) => {
+    const renderTransactionHistory = (txs: PointTransaction[]) => {
         if (txs.length === 0) return <p className="text-center text-gray-500 py-8">Nessuna transazione in questa categoria.</p>;
         return (
-            <div className="overflow-x-auto">
-                <table className="w-full text-sm text-left table-auto">
-                    <thead className="bg-gray-100 text-gray-600 sticky top-0">
-                        <tr>
-                            <th className="p-3 font-semibold w-32">Data</th>
-                            <th className="p-3 font-semibold">Nome</th>
-                            <th className="p-3 font-semibold">Descrizione</th>
-                            <th className="p-3 font-semibold w-24 text-center">Variazione</th>
-                            <th className="p-3 font-semibold w-24 text-right">Saldo</th>
-                            <th className="p-3 font-semibold w-16 text-center">Azione</th>
-                        </tr>
-                    </thead>
-                    <tbody className="text-gray-700">
-                        {txs.map(tx => {
-                            const { name, description } = parseTransactionDescription(tx);
-                            return (
-                                <tr key={tx.id} className={`border-b border-gray-200 last:border-b-0 ${tx.isReversed ? 'bg-gray-50 text-gray-400' : 'bg-white'}`}>
-                                    <td className={`p-3 whitespace-nowrap ${tx.isReversed ? 'line-through' : ''}`}>{new Date(tx.date).toLocaleDateString('it-IT')}</td>
-                                    <td className={`p-3 font-medium break-words ${tx.isReversed ? 'line-through' : ''}`}>{name}</td>
-                                    <td className={`p-3 break-words text-gray-500 ${tx.isReversed ? 'line-through' : ''}`}>{description}</td>
-                                    <td className={`p-3 text-center font-bold ${tx.isReversed ? 'line-through' : (tx.pointsChange >= 0 ? 'text-green-500' : 'text-red-500')}`}>
-                                        {tx.pointsChange > 0 ? `+${tx.pointsChange}` : tx.pointsChange}
-                                    </td>
-                                    <td className={`p-3 text-right font-mono ${tx.isReversed ? 'line-through' : ''}`}>{tx.balanceAfter}</td>
-                                    <td className="p-3 text-center">
+            <div>
+                 {/* Mobile Card View */}
+                <div className="md:hidden space-y-3">
+                    {txs.map(tx => {
+                        const { name, description } = parseTransactionDescription(tx);
+                        return (
+                            <div key={tx.id} className={`p-4 rounded-xl border ${tx.isReversed ? 'bg-gray-100/60 border-gray-200/60 text-gray-400' : 'bg-white border-black/5 shadow-sm'}`}>
+                                <div className="flex justify-between items-start gap-3">
+                                    <div className="flex-grow">
+                                        <p className={`font-bold ${tx.isReversed ? 'line-through' : 'text-gray-800'}`}>{name}</p>
+                                        <p className={`text-xs ${tx.isReversed ? 'line-through' : 'text-gray-500'}`}>{new Date(tx.date).toLocaleDateString('it-IT', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
+                                    </div>
+                                    <div className="text-right shrink-0">
+                                        <p className={`font-bold text-lg ${tx.isReversed ? 'line-through' : (tx.pointsChange >= 0 ? 'text-green-500' : 'text-red-500')}`}>
+                                            {tx.pointsChange > 0 ? `+${tx.pointsChange}` : tx.pointsChange}
+                                        </p>
+                                        <p className={`text-xs font-mono ${tx.isReversed ? 'line-through' : 'text-gray-500'}`}>Saldo: {tx.balanceAfter}</p>
+                                    </div>
+                                </div>
+                                {(description !== '-' || (!tx.isReversed && (tx.type === 'assignment' || tx.type === 'redemption'))) && (
+                                    <div className="mt-3 pt-3 border-t border-gray-200/80 flex justify-between items-center gap-3">
+                                        <p className={`text-sm text-gray-500 ${tx.isReversed ? 'line-through' : ''}`}>{description}</p>
                                         {!tx.isReversed && (tx.type === 'assignment' || tx.type === 'redemption') && (
-                                            <button onClick={() => setTxToReverse(tx)} className="p-1 rounded-full text-gray-500 hover:text-indigo-600 hover:bg-gray-100 transition-colors" title="Storna Transazione" disabled={isLoading}>
+                                            <button onClick={() => setTxToReverse(tx)} className="p-1.5 rounded-full text-gray-500 hover:text-indigo-600 hover:bg-gray-100 transition-colors" title="Storna Transazione" disabled={isLoading}>
                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3" /></svg>
                                             </button>
                                         )}
-                                    </td>
-                                </tr>
-                            );
-                        })}
-                    </tbody>
-                </table>
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    })}
+                </div>
+
+                {/* Desktop Table View */}
+                <div className="hidden md:block overflow-x-auto">
+                    <table className="w-full text-sm text-left table-auto">
+                        <thead className="bg-gray-100 text-gray-600 sticky top-0">
+                            <tr>
+                                <th className="p-3 font-semibold w-32">Data</th>
+                                <th className="p-3 font-semibold">Nome</th>
+                                <th className="p-3 font-semibold">Descrizione</th>
+                                <th className="p-3 font-semibold w-24 text-center">Variazione</th>
+                                <th className="p-3 font-semibold w-24 text-right">Saldo</th>
+                                <th className="p-3 font-semibold w-16 text-center">Azione</th>
+                            </tr>
+                        </thead>
+                        <tbody className="text-gray-700">
+                            {txs.map(tx => {
+                                const { name, description } = parseTransactionDescription(tx);
+                                return (
+                                    <tr key={tx.id} className={`border-b border-gray-200 last:border-b-0 ${tx.isReversed ? 'bg-gray-50 text-gray-400' : 'bg-white'}`}>
+                                        <td className={`p-3 whitespace-nowrap ${tx.isReversed ? 'line-through' : ''}`}>{new Date(tx.date).toLocaleDateString('it-IT')}</td>
+                                        <td className={`p-3 font-medium break-words ${tx.isReversed ? 'line-through' : ''}`}>{name}</td>
+                                        <td className={`p-3 break-words text-gray-500 ${tx.isReversed ? 'line-through' : ''}`}>{description}</td>
+                                        <td className={`p-3 text-center font-bold ${tx.isReversed ? 'line-through' : (tx.pointsChange >= 0 ? 'text-green-500' : 'text-red-500')}`}>
+                                            {tx.pointsChange > 0 ? `+${tx.pointsChange}` : tx.pointsChange}
+                                        </td>
+                                        <td className={`p-3 text-right font-mono ${tx.isReversed ? 'line-through' : ''}`}>{tx.balanceAfter}</td>
+                                        <td className="p-3 text-center">
+                                            {!tx.isReversed && (tx.type === 'assignment' || tx.type === 'redemption') && (
+                                                <button onClick={() => setTxToReverse(tx)} className="p-1 rounded-full text-gray-500 hover:text-indigo-600 hover:bg-gray-100 transition-colors" title="Storna Transazione" disabled={isLoading}>
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3" /></svg>
+                                                </button>
+                                            )}
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         );
     }
@@ -215,14 +251,19 @@ const HistoryModal: React.FC<{ user: User, onClose: () => void, onUpdate: (user:
     const renderTabButton = (tabName: 'all' | 'assigned' | 'redeemed', label: string) => {
         const isActive = activeTab === tabName;
         return (
-            <button onClick={() => setActiveTab(tabName)} className={`${isActive ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700'} whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm`}>{label}</button>
+            <button 
+                onClick={() => setActiveTab(tabName)} 
+                className={`flex-1 text-center transition-colors ${isActive ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700'} py-3 px-1 border-b-2 font-medium text-xs sm:text-sm`}
+            >
+                {label}
+            </button>
         );
     };
 
     return (
         <div className="text-gray-700">
             <div className="border-b border-gray-200 mb-4">
-                <nav className="-mb-px flex space-x-6">
+                <nav className="-mb-px flex space-x-2 sm:space-x-4">
                     {renderTabButton('all', 'Lista Movimenti')}
                     {renderTabButton('assigned', 'Punti Assegnati')}
                     {renderTabButton('redeemed', 'Premi Riscattati')}
@@ -230,9 +271,9 @@ const HistoryModal: React.FC<{ user: User, onClose: () => void, onUpdate: (user:
             </div>
             <div className="h-[60vh] overflow-auto hide-scrollbar">
                 {isLoading ? <p className="text-center p-8">Caricamento...</p> : (
-                    activeTab === 'all' ? renderTable(transactions) :
-                    activeTab === 'assigned' ? renderTable(assignedTransactions) : 
-                    renderTable(redeemedTransactions)
+                    activeTab === 'all' ? renderTransactionHistory(transactions) :
+                    activeTab === 'assigned' ? renderTransactionHistory(assignedTransactions) : 
+                    renderTransactionHistory(redeemedTransactions)
                 )}
             </div>
             {txToReverse && (<Modal title="Conferma Storno" onClose={() => setTxToReverse(null)}><div className="text-gray-700"><p className="mb-4">Sei sicuro di voler stornare la transazione <span className="font-bold">"{txToReverse.description}"</span>?<br/>Verrà creata una transazione correttiva.</p><div className="flex justify-end gap-3 mt-6"><Button onClick={() => setTxToReverse(null)} variant="secondary" disabled={isLoading}>Annulla</Button><Button onClick={handleConfirmReverse} variant="danger" disabled={isLoading}>Conferma Storno</Button></div></div></Modal>)}
@@ -367,11 +408,11 @@ const CustomerManagement: React.FC<{onDataChange: () => void; showToast: (messag
                              <div className="text-xs text-gray-500">
                                 Cliente dal: {new Date(customer.creationDate).toLocaleDateString('it-IT')}
                             </div>
-                            <div className="flex justify-start items-center gap-2 flex-wrap border-t border-gray-200 -m-4 mt-3 p-3 bg-gray-50/50 rounded-b-xl">
-                                <Button size="sm" variant="secondary" onClick={() => openModal(customer, 'assign')}>Assegna</Button>
-                                <Button size="sm" variant="secondary" onClick={() => openModal(customer, 'redeem')}>Riscatta</Button>
-                                <Button size="sm" variant="secondary" onClick={() => openModal(customer, 'history')}>Storico</Button>
-                                <Button size="sm" variant="danger" onClick={() => openModal(customer, 'delete')}>Elimina</Button>
+                            <div className="flex items-center justify-around border-t border-gray-200 -m-4 mt-3 p-2 bg-gray-50/50 rounded-b-xl">
+                                <Button size="sm" variant="secondary" className="!px-2 !text-[11px] whitespace-nowrap" onClick={() => openModal(customer, 'assign')}>Assegna</Button>
+                                <Button size="sm" variant="secondary" className="!px-2 !text-[11px] whitespace-nowrap" onClick={() => openModal(customer, 'redeem')}>Riscatta</Button>
+                                <Button size="sm" variant="secondary" className="!px-2 !text-[11px] whitespace-nowrap" onClick={() => openModal(customer, 'history')}>Storico</Button>
+                                <Button size="sm" variant="danger" className="!px-2 !text-[11px] whitespace-nowrap" onClick={() => openModal(customer, 'delete')}>Elimina</Button>
                             </div>
                         </div>
                     ))}
